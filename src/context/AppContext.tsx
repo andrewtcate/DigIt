@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, useCallback } from 'react';
-import type { Post, View } from '../types';
-import { mockPosts, currentUser } from '../data/mockData';
+import type { Post, View, User } from '../types';
+import { mockPosts, currentUser as defaultUser } from '../data/mockData';
 
 interface AppContextValue {
   view: View;
@@ -10,6 +10,8 @@ interface AppContextValue {
   addPost: (post: Post) => void;
   selectedPost: Post | null;
   setSelectedPost: (post: Post | null) => void;
+  user: User;
+  updateProfile: (updates: Partial<User>) => void;
 }
 
 const AppContext = createContext<AppContextValue | null>(null);
@@ -18,6 +20,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const [view, setView] = useState<View>('feed');
   const [posts, setPosts] = useState<Post[]>(mockPosts);
   const [selectedPost, setSelectedPost] = useState<Post | null>(null);
+  const [user, setUser] = useState<User>(defaultUser);
 
   const toggleLike = useCallback((postId: string) => {
     setPosts(prev => prev.map(p =>
@@ -31,8 +34,12 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     setPosts(prev => [post, ...prev]);
   }, []);
 
+  const updateProfile = useCallback((updates: Partial<User>) => {
+    setUser(prev => ({ ...prev, ...updates }));
+  }, []);
+
   return (
-    <AppContext.Provider value={{ view, setView, posts, toggleLike, addPost, selectedPost, setSelectedPost }}>
+    <AppContext.Provider value={{ view, setView, posts, toggleLike, addPost, selectedPost, setSelectedPost, user, updateProfile }}>
       {children}
     </AppContext.Provider>
   );
@@ -43,5 +50,3 @@ export function useApp() {
   if (!ctx) throw new Error('useApp must be inside AppProvider');
   return ctx;
 }
-
-export { currentUser };

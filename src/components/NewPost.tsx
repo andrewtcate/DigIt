@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { MapPin, ChevronLeft, Check, Loader } from 'lucide-react';
-import { useApp, currentUser } from '../context/AppContext';
+import { useApp } from '../context/AppContext';
 import type { Post } from '../types';
 
 const PLANT_OPTIONS = [
@@ -31,7 +31,7 @@ interface Props {
 }
 
 export default function NewPost({ imageUrl, onRetake, onDone }: Props) {
-  const { addPost } = useApp();
+  const { addPost, user } = useApp();
   const [caption, setCaption] = useState('');
   const [selectedPlant, setSelectedPlant] = useState<{ name: string; emoji: string } | null>(null);
   const [customPlant, setCustomPlant] = useState('');
@@ -91,9 +91,9 @@ export default function NewPost({ imageUrl, onRetake, onDone }: Props) {
 
     const newPost: Post = {
       id: `p-${Date.now()}`,
-      userId: currentUser.id,
-      username: currentUser.username,
-      userAvatar: currentUser.avatar,
+      userId: user.id,
+      username: user.username,
+      userAvatar: user.avatar,
       imageUrl,
       caption: caption.trim() || `Growing ${plant.name} right now! ${plant.emoji}`,
       plantName: plant.name,

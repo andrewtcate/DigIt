@@ -15,7 +15,7 @@ function AppContent() {
   return (
     <div className="app-shell">
       {/* Main content area */}
-      <div className={isCamera ? 'camera-page' : isMap ? 'map-page' : 'flex-1 overflow-hidden'}>
+      <div className={isCamera ? 'camera-page' : isMap ? 'map-page' : 'flex-1 flex flex-col min-h-0'}>
         {view === 'feed'    && <Feed />}
         {view === 'map'     && <MapView />}
         {view === 'camera'  && <Camera />}

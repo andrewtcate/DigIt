@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { X, Send } from 'lucide-react';
 import type { Post, Comment } from '../types';
-import { currentUser } from '../context/AppContext';
+import { useApp } from '../context/AppContext';
 
 interface Props {
   post: Post;
@@ -9,6 +9,7 @@ interface Props {
 }
 
 export default function CommentsSheet({ post, onClose }: Props) {
+  const { user } = useApp();
   const [text, setText] = useState('');
   const [comments, setComments] = useState<Comment[]>(post.comments);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -22,9 +23,9 @@ export default function CommentsSheet({ post, onClose }: Props) {
     if (!text.trim()) return;
     const newComment: Comment = {
       id: `c-${Date.now()}`,
-      userId: currentUser.id,
-      username: currentUser.username,
-      avatar: currentUser.avatar,
+      userId: user.id,
+      username: user.username,
+      avatar: user.avatar,
       text: text.trim(),
       timestamp: new Date(),
     };
@@ -89,7 +90,7 @@ export default function CommentsSheet({ post, onClose }: Props) {
         </div>
         {/* Input */}
         <div className="flex items-center gap-3 px-4 py-3 border-t border-gray-100 pb-safe">
-          <img src={currentUser.avatar} alt="" className="avatar w-8 h-8 flex-shrink-0" />
+          <img src={user.avatar} alt="" className="avatar w-8 h-8 flex-shrink-0" />
           <div className="flex-1 flex items-center bg-gray-100 rounded-full px-4 py-2 gap-2">
             <input
               ref={inputRef}
