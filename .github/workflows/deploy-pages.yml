@@ -32,6 +32,9 @@ jobs:
       # Project pages are served from /<repo>/, so rebase asset URLs.
       - run: npm run build -- --base=/DigIt/
       - uses: actions/configure-pages@v5
+        with:
+          # Create the Pages site on first run so no manual settings step is needed.
+          enablement: true
       - uses: actions/upload-pages-artifact@v3
         with:
           path: dist
