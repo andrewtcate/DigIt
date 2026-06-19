@@ -1,8 +1,8 @@
 {
-  "name": "atlas-terminal",
+  "name": "farescout",
   "private": true,
   "version": "1.0.0",
-  "description": "ATLAS Terminal — command-driven equity analytics workstation",
+  "description": "FareScout — cheap international flight deal finder optimizing cash + credit-card/airline points",
   "type": "module",
   "scripts": {
     "dev": "vite",

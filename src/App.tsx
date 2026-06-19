@@ -1,90 +1,108 @@
-import { TerminalProvider, useTerminal } from './state/TerminalContext'
-import { getSecurity } from './data/engine'
-import { resolveFunction } from './state/registry'
-import CommandBar from './components/CommandBar'
-import Watchlist from './components/Watchlist'
-import QuoteHeader from './components/QuoteHeader'
-import StatusBar from './components/StatusBar'
-import MOST from './functions/MOST'
-import DES from './functions/DES'
-import GP from './functions/GP'
-import FA from './functions/FA'
-import DCF from './functions/DCF'
-import COMP from './functions/COMP'
-import EQS from './functions/EQS'
-import PORT from './functions/PORT'
-import MC from './functions/MC'
-import OVM from './functions/OVM'
-import NEWS from './functions/NEWS'
-import HELP from './functions/HELP'
+import { useMemo, useState } from 'react'
+import { SettingsProvider } from './state/store'
+import { useSettings } from './state/settingsContext'
+import { rankDeals, useDeals } from './state/useDeals'
+import { hasBalances } from './lib/points'
+import type { Mode } from './types'
+import { HomeCityBanner } from './components/HomeCity'
+import { ModeToggle } from './components/ModeToggle'
+import { RefinementPanel } from './components/RefinementPanel'
+import { DealCard } from './components/DealCard'
+import { Badge } from './components/Badge'
+import { usd } from './lib/format'
 
-function Screen() {
-  const { view } = useTerminal()
-  const fn = resolveFunction(view.func)
-  const security = view.ticker ? getSecurity(view.ticker) : undefined
+function Dashboard() {
+  const { settings } = useSettings()
+  const { deals, loading, source, note, refresh } = useDeals(settings)
+  const [mode, setMode] = useState<Mode>('haveNow')
 
-  if (fn?.requiresSecurity && !security) {
-    return (
-      <div className="flex items-center justify-center h-full text-zinc-500 text-sm">
-        Load a security first — e.g. type <span className="text-amber mx-1 font-bold">AAPL</span> in the command line.
-      </div>
-    )
-  }
-
-  const body = (() => {
-    switch (fn?.code) {
-      case 'MOST': return <MOST />
-      case 'DES': return <DES security={security!} />
-      case 'GP': return <GP security={security!} />
-      case 'FA': return <FA security={security!} />
-      case 'DCF': return <DCF security={security!} />
-      case 'COMP': return <COMP security={security!} />
-      case 'EQS': return <EQS />
-      case 'PORT': return <PORT />
-      case 'MC': return <MC security={security!} />
-      case 'OVM': return <OVM security={security!} />
-      case 'N': return <NEWS ticker={view.ticker} />
-      case 'HELP': return <HELP />
-      default: return <MOST />
-    }
-  })()
+  const ranked = useMemo(() => rankDeals(deals, settings, mode), [deals, settings, mode])
+  const hasPoints = hasBalances(settings.balances)
 
   return (
-    <div className="flex flex-col gap-2 h-full min-h-0">
-      {fn?.requiresSecurity && security && <QuoteHeader security={security} />}
-      <div className="flex-1 min-h-0 overflow-auto">{body}</div>
-    </div>
-  )
-}
+    <div className="mx-auto max-w-3xl px-4 py-6 sm:py-8">
+      <header className="mb-5">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2.5">
+            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-blue-600 text-lg font-black text-white">
+              ✈
+            </div>
+            <div>
+              <h1 className="text-xl font-extrabold tracking-tight text-slate-900">FareScout</h1>
+              <p className="-mt-0.5 text-xs text-slate-500">
+                Cheapest international flights from {settings.homeLabel}
+              </p>
+            </div>
+          </div>
+          <button
+            onClick={refresh}
+            className="rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-sm font-semibold text-slate-600 hover:bg-slate-50"
+          >
+            ↻ Rescan
+          </button>
+        </div>
 
-function Shell() {
-  return (
-    <div className="h-screen flex flex-col bg-bg text-zinc-200 font-mono text-sm overflow-hidden">
-      <header className="flex items-center gap-3 px-3 h-11 border-b border-line bg-black shrink-0">
-        <div className="flex items-baseline gap-1 select-none">
-          <span className="text-amber font-black tracking-[0.2em] text-base">ATLAS</span>
-          <span className="text-zinc-500 text-[10px] tracking-widest">TERMINAL</span>
+        <div className="mt-3 flex flex-wrap items-center gap-2 text-xs text-slate-500">
+          <Badge tone={source === 'amadeus' ? 'green' : 'gray'}>
+            {source === 'amadeus' ? 'Live: Amadeus' : 'Offline estimates'}
+          </Badge>
+          <span>
+            {settings.departureAirports.map((a) => a.iata).join(' · ')}
+          </span>
+          {settings.cashBudgetUSD != null && (
+            <Badge tone="blue">Budget {usd(settings.cashBudgetUSD)}</Badge>
+          )}
+          {!hasPoints && <span className="text-slate-400">· add rewards balances to optimize points</span>}
         </div>
-        <CommandBar />
-        <div className="ml-auto hidden md:block text-[10px] text-zinc-600 tracking-wider">
-          EQUITY ANALYTICS WORKSTATION
-        </div>
+        {note && <p className="mt-1.5 text-xs text-amber-600">{note}</p>}
       </header>
-      <div className="flex flex-1 min-h-0">
-        <Watchlist />
-        <main className="flex-1 min-w-0 min-h-0 p-2 overflow-auto">
-          <Screen />
-        </main>
+
+      <HomeCityBanner />
+
+      <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+        <ModeToggle mode={mode} onChange={setMode} />
+        <span className="text-sm text-slate-500">
+          {loading ? 'Scanning…' : `${ranked.length} deals`}
+        </span>
       </div>
-      <StatusBar />
+
+      <main className="space-y-4">
+        {loading && deals.length === 0 ? (
+          <div className="space-y-4">
+            {[0, 1, 2].map((i) => (
+              <div key={i} className="h-40 animate-pulse rounded-2xl bg-slate-100" />
+            ))}
+          </div>
+        ) : ranked.length === 0 ? (
+          <div className="rounded-2xl border border-slate-200 bg-white p-8 text-center text-slate-500 card-shadow">
+            No deals within your budget. Raise the cash budget or switch to “Best deal if I acquire
+            points”.
+          </div>
+        ) : (
+          ranked.map((deal, i) => (
+            <DealCard key={deal.destination.id} deal={deal} rank={i + 1} mode={mode} cabin={settings.cabin} />
+          ))
+        )}
+      </main>
+
+      <div className="mt-6">
+        <RefinementPanel />
+      </div>
+
+      <footer className="mt-8 text-center text-xs text-slate-400">
+        FareScout ranks the cheapest realistic option per destination across your nearby airports,
+        learns each route&apos;s price baseline over time to flag deals, and optimizes cash + points.
+        Award sweet spots and transfer ratios are configurable in{' '}
+        <code className="rounded bg-slate-100 px-1 py-0.5">src/data/transferPartners.ts</code>.
+      </footer>
     </div>
   )
 }
 
 export default function App() {
   return (
-    <TerminalProvider>
-      <Shell />
-    </TerminalProvider>
+    <SettingsProvider>
+      <Dashboard />
+    </SettingsProvider>
   )
 }

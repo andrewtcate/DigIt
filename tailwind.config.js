@@ -4,17 +4,16 @@ export default {
   theme: {
     extend: {
       colors: {
-        bg: '#07090d',
-        panel: '#0d1118',
-        panelhead: '#11161f',
-        line: '#1f2733',
-        amber: '#ffb000',
-        up: '#22c55e',
-        down: '#ef4444',
-        warn: '#eab308',
+        brand: {
+          50: '#eff6ff',
+          100: '#dbeafe',
+          500: '#3b82f6',
+          600: '#2563eb',
+          700: '#1d4ed8',
+        },
       },
       fontFamily: {
-        mono: ['"IBM Plex Mono"', 'ui-monospace', 'SFMono-Regular', 'Menlo', 'monospace'],
+        sans: ['Inter', 'ui-sans-serif', 'system-ui', 'sans-serif'],
       },
     },
   },
